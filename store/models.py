@@ -9,7 +9,7 @@ class Category(models.Model):
         return self.name
     
         
-    # it makes our mobel name categories instead of categorys
+    # it makes our model name categories instead of categorys
     class Meta:
         verbose_name_plural = 'categories'
     
