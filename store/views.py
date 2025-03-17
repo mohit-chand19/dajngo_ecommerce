@@ -1,9 +1,10 @@
 from django.shortcuts import redirect, render
-from .models import Product, Category
+from .models import Product, Category, Profile
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
 from django.contrib.auth.models import User
-from .forms import SignUpForm, UpdateUserForm, ChangePasswordForm
+from .forms import SignUpForm, UpdateUserForm, ChangePasswordForm, UserInfoForm
+from django.db.models import Q
 
 
 
@@ -48,8 +49,8 @@ def register_user(request):
             # login user
             user = authenticate(username=username, password=password)
             login(request, user)
-            messages.success(request, "You have been Registered successfully! Welcome...")
-            return redirect('home')
+            messages.success(request, "You have been Registered successfully! Please Fill Out User Details...")
+            return redirect('update_info')
         else:
             print(form.errors)
             messages.success(request, "Whoops! There was an error while registering Try Again...")
@@ -119,3 +120,36 @@ def update_password(request):
     else:
         messages.success(request, "You Must Be Logged In To Access That Page...")
         return redirect('home')
+    
+def update_info(request):
+    if request.user.is_authenticated:
+        current_user = Profile.objects.get(user__id=request.user.id)
+        form = UserInfoForm(request.POST or None, instance=current_user)
+
+        if form.is_valid():
+            form.save()
+
+            messages.success(request, "Your Info Has Been Updated...")
+            return redirect('home')
+        return render(request, "update_info.html", {'form':form})
+    else:
+        messages.success(request, "You Must Be Logged In To Access That Page...")
+        return redirect('home')
+    
+
+def search(request):
+    # Determine if they fill out the form
+    if request.method == "POST":
+        searched = request.POST["searched"]
+        products = Product.objects.filter(
+            Q(name__icontains=searched) | Q(Category__name__icontains=searched) | Q(description__icontains=searched)
+        )
+        if not products:
+            messages.success(request, "Sorry that product does not found...Try Again!")
+            return redirect('search')
+
+        else:
+            return render(request, "search.html", {'searched':searched, 'products':products})
+
+    else:
+        return render(request, "search.html", {})
