@@ -5,6 +5,8 @@ from django.contrib import messages
 from django.contrib.auth.models import User
 from .forms import SignUpForm, UpdateUserForm, ChangePasswordForm, UserInfoForm
 from django.db.models import Q
+import json
+from cart.cart import Cart
 
 
 
@@ -23,6 +25,25 @@ def login_user(request):
         user = authenticate(request, username=username, password=password) # authenticating the user
         if user is not None: # Checking if authentication was successful
             login(request, user)
+
+            # Do some shopping cart stuffs
+
+            # first get the user profile that is logged in
+            current_user = Profile.objects.get(user__id=request.user.id)
+            # Get their saved cart from db
+            saved_cart = current_user.old_cart
+            # Convert database string to python dictionary
+            if saved_cart:
+                # convert to dictionary using json
+                converted_cart = json.loads(saved_cart)
+                # Add the loaded cart dictioanry to our session
+                # get the cart
+                cart = Cart(request)
+                # Loop thru the cart and add items from db
+                for key, value in converted_cart.items():
+                    cart.db_add(product=key, quantity=value)
+
+
             messages.success(request, "You have been logged in successfully!")
             return redirect('home')
         else:

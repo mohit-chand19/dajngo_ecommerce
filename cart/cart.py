@@ -1,7 +1,9 @@
-from store.models import Product
+from store.models import Product, Profile
 class Cart():
     def __init__(self, request):
         self.session = request.session
+        # Get the user
+        self.request = request
 
         # Get the current session key if it exists
         cart = self.session.get('session_key')
@@ -13,6 +15,30 @@ class Cart():
         
         # Make sure cart is available on all pages of site
         self.cart = cart
+
+    def db_add(self, product, quantity):
+        product_id = str(product)
+        product_qty = str(quantity)
+
+        # Logic
+        if product_id in self.cart:
+            pass
+        else:
+            # self.cart[product_id] = {'price': str(product.price)}
+            self.cart[product_id] = int(product_qty)
+
+
+        self.session.modified = True
+
+        # Deal with logged in user
+        if self.request.user.is_authenticated:
+            # Get the current user profile
+            current_user = Profile.objects.filter(user__id=self.request.user.id)
+            # Convert {'1':3, '3':5}[this is dictionary] to {"1":3, "3":5} [this is JSON format]
+            carty = str(self.cart)
+            carty = carty.replace("\'", "\"")
+            # Save the carty to the user Profile
+            current_user.update(old_cart=str(carty))
 
     def add(self, product, quantity):
         product_id = str(product.id)
@@ -27,6 +53,17 @@ class Cart():
 
 
         self.session.modified = True
+
+        # Deal with logged in user
+        if self.request.user.is_authenticated:
+            # Get the current user profile
+            current_user = Profile.objects.filter(user__id=self.request.user.id)
+            # Convert {'1':3, '3':5}[this is dictionary] to {"1":3, "3":5} [this is JSON format]
+            carty = str(self.cart)
+            carty = carty.replace("\'", "\"")
+            # Save the carty to the user Profile
+            current_user.update(old_cart=str(carty))
+
 
     def __len__(self):
         return len(self.cart)
@@ -55,6 +92,16 @@ class Cart():
 
         self.session.modified = True
 
+        # Deal with logged in user
+        if self.request.user.is_authenticated:
+            # Get the current user profile
+            current_user = Profile.objects.filter(user__id=self.request.user.id)
+            # Convert {'1':3, '3':5}[this is dictionary] to {"1":3, "3":5} [this is JSON format]
+            carty = str(self.cart)
+            carty = carty.replace("\'", "\"")
+            # Save the carty to the user Profile
+            current_user.update(old_cart=str(carty))
+
         updated_cart = self.cart
         return updated_cart
     
@@ -65,6 +112,17 @@ class Cart():
             del self.cart[product_id]
 
         self.session.modified = True
+
+        # Deal with logged in user
+        if self.request.user.is_authenticated:
+            # Get the current user profile
+            current_user = Profile.objects.filter(user__id=self.request.user.id)
+            # Convert {'1':3, '3':5}[this is dictionary] to {"1":3, "3":5} [this is JSON format]
+            carty = str(self.cart)
+            carty = carty.replace("\'", "\"")
+            # Save the carty to the user Profile
+            current_user.update(old_cart=str(carty))
+
 
     def cart_total(self):
         # Get product ids
