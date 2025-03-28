@@ -44,7 +44,7 @@ class Order(models.Model):
     date_order = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"{self.user.username}'s Order"
+        return f"Order - {str(self.id)}"
 
 # Create Order Items Model
 class OrderItem(models.Model):
