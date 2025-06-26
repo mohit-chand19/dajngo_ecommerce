@@ -7,6 +7,24 @@ from .models import ShippingAddress, Order, OrderItem
 from store.models import Profile, Product
 from django.contrib.auth.models import User
 
+
+def not_shipped_dash(request):
+    if request.user.is_authenticated and request.user.is_superuser:
+        orders = Order.objects.filter(shipped=False)
+        return render(request, "payment/not_shipped_dash.html",{'orders':orders})
+    else:
+        messages.success(request, "Access Denied!")
+        return redirect('home')
+
+def shipped_dash(request):
+    if request.user.is_authenticated and request.user.is_superuser:
+        orders = Order.objects.filter(shipped=True)
+        return render(request, "payment/shipped_dash.html",{'orders':orders})
+    else:
+        messages.success(request, "Access Denied!")
+        return redirect('home')
+
+
 # Create your views here.
 def payment_success(request):
     return render(request, "payment/payment_success.html",{})
@@ -120,7 +138,12 @@ def process_order(request):
                     if int(key) == product.id:
                         # create an order
                         create_order_item = OrderItem(order_id=order_id ,product_id=product_id,user=user,quantity=value,price=product_price)
-                        create_order_item.save()    
+                        create_order_item.save() 
+            
+            # Delete our cart
+            for key in list(request.session.keys()):
+                if key == 'session_key':
+                    del request.session[key]
 
 
             messages.success(request, "Order Placed!")
@@ -150,12 +173,17 @@ def process_order(request):
                 for key, value in quantities.items():
                     if int(key) == product.id:
                         # create an order
-                        create_order_item = OrderItem(order_id=order_id ,product=product_id,quantity=value,price=product_price)
-                        create_order_item.save() 
+                        create_order_item = OrderItem(order_id=order_id ,product_id=product_id,quantity=value,price=product_price)
+                        create_order_item.save()
+
+            # Delete our cart
+            for key in list(request.session.keys()):
+                if key == 'session_key':
+                    del request.session[key]           
+
             messages.success(request, "Order Placed!")
             return redirect('home')
         
     else:
         messages.success(request, "Access Denied!")
         return redirect('home')
-    
